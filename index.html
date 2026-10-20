@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>「メフィスト賞」全通计划 · 侦探档案室</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --bg: #f4efe6;          /* 温暖米白色背景 */
+    --paper: #fffcf7;       /* 纸张白 */
+    --paper-card: #f7f2ea;  /* 卡片浅色底 */
+    --border: #d4c5b9;      /* 浅复古边框 */
+    --border-dark: #8c6d53; /* 深棕线条 */
+    --accent: #8c3b2f;      /* 昭和红印章色 */
+    --gold: #b8860b;        /* 典雅金 */
+    --text: #3b302a;        /* 墨水黑棕 */
+    --muted: #827267;       /* 灰棕说明文字 */
+    --retro-brown: #5c3a21; /* 复古咖啡棕色 */
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Noto Serif SC", "Source Han Serif CN", "STSong", "SimSun", serif;
+    padding-bottom: 90px;
+    background-image: radial-gradient(circle, #e6ded1 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+  .container { max-width: 980px; margin: 0 auto; padding: 0 10px; }
+  
+  /* 顶部昭和复古横幅 */
+  header {
+    margin: 12px 0 12px;
+    background: var(--paper);
+    border: 2px solid var(--border-dark);
+    border-radius: 4px;
+    padding: 16px 10px;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 3px 10px rgba(60,45,35,0.06);
+  }
+  header::before, header::after {
+    content: "◆";
+    position: absolute;
+    color: var(--accent);
+    font-size: 0.7rem;
+    top: 6px;
+  }
+  header::before { left: 8px; }
+  header::after { right: 8px; }
+
+  h1 { 
+    font-size: 1.35rem; 
+    letter-spacing: 2px; 
+    color: var(--accent);
+    margin-bottom: 4px;
+    font-weight: bold;
+  }
+  .subtitle {
+    font-size: 0.75rem;
+    color: var(--muted);
+    font-family: sans-serif;
+    letter-spacing: 0.5px;
+  }
+  
+  /* 顶部 BGM 音乐挂件 */
+  .music-widget {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    background: #faf4ec;
+    border: 1px solid var(--border-dark);
+    padding: 4px 8px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    font-family: sans-serif;
+    color: var(--text);
+  }
+  .music-icon {
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: transform 0.15s, opacity 0.15s;
+    user-select: none;
+    opacity: 0.5;
+  }
+  .music-icon.playing {
+    opacity: 1;
+    transform: scale(1.1);
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+  }
+  .music-widget input[type="range"] {
+    width: 50px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+
+  .sync-badge {
+    display: inline-block;
+    margin-top: 6px;
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border: 1px dashed var(--border-dark);
+    color: var(--muted);
+    font-family: sans-serif;
+    background: #faf6f0;
+  }
+  .sync-badge.online { color: #2b8a3e; border-color: #2b8a3e; background: rgba(43,138,62,0.06); }
+
+  /* 总体与个人进度面板 */
+  .overview-box {
+    background: var(--paper);
+    border: 2px solid var(--border-dark);
+    border-radius: 4px;
+    padding: 12px;
+    margin-bottom: 12px;
+    box-shadow: 0 3px 8px rgba(60,45,35,0.05);
+  }
+  
+  .personal-progress-section {
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed var(--border);
+  }
+  .personal-stats-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.82rem;
+    margin-bottom: 4px;
+    font-family: sans-serif;
+  }
+  .personal-stats-header b { color: var(--accent); font-size: 0.9rem; }
+  .personal-bar {
+    height: 8px;
+    background: #e8e0d5;
+    border: 1px solid var(--border-dark);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .personal-fill {
+    height: 100%;
+    background: var(--accent);
+    width: 0%;
+    transition: width 0.3s;
+  }
+
+  .team-progress-section {
+    margin-bottom: 10px;
+  }
+  .team-stats-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.78rem;
+    margin-bottom: 4px;
+    font-family: sans-serif;
+  }
+  .team-stats-header b { color: var(--gold); }
+  .total-bar {
+    height: 5px;
+    background: #e8e0d5;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .total-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--border-dark), var(--gold));
+    width: 0%;
+    transition: width 0.3s;
+  }
+
+  .members-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    padding-top: 2px;
+  }
+  .member-card {
+    background: var(--paper-card);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 6px 4px;
+    cursor: pointer;
+    text-align: center;
+  }
+  .member-card.active {
+    background: #f2e6dc;
+    border-color: var(--accent);
+    box-shadow: inset 0 0 3px rgba(140,59,47,0.2);
+  }
+  .m-top { display: flex; flex-direction: column; font-size: 0.78rem; font-weight: bold; gap: 1px; }
+  .m-cnt { color: var(--accent); font-size: 0.68rem; font-family: monospace; }
+  .m-bar { height: 3px; background: #e0d5cb; margin-top: 4px; overflow: hidden; }
+  .m-fill { height: 100%; background: var(--accent); width: 0%; }
+
+  /* 筛选与排序栏 */
+  .toolbar {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+  select, input[type="search"] {
+    background: var(--paper);
+    color: var(--text);
+    border: 1px solid var(--border-dark);
+    padding: 8px 10px;
+    border-radius: 3px;
+    font-size: 0.8rem;
+    outline: none;
+    font-family: sans-serif;
+  }
+  select { flex: 1; min-width: 110px; }
+  input[type="search"] { flex: 2; min-width: 140px; }
+
+  /* 书单列表 */
+  .book-list { display: flex; flex-direction: column; gap: 8px; }
+  .book-item {
+    background: var(--paper);
+    border: 1px solid var(--border-dark);
+    border-radius: 4px;
+    padding: 10px 12px;
+    box-shadow: 0 1px 4px rgba(60,45,35,0.03);
+  }
+  .book-item.is-read { border-left: 4px solid var(--accent); }
+  
+  .b-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+  .b-info { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+  .b-id {
+    font-family: monospace;
+    font-size: 0.72rem;
+    color: var(--accent);
+    background: #f7eee3;
+    border: 1px solid var(--border);
+    padding: 1px 4px;
+    border-radius: 2px;
+    font-weight: bold;
+  }
+  .b-title { 
+    font-size: 0.98rem; 
+    font-weight: 800; 
+    color: var(--retro-brown); 
+  }
+  .b-author { font-size: 0.75rem; color: var(--muted); }
+  .b-avg { font-size: 0.78rem; font-weight: 600; color: var(--gold); white-space: nowrap; font-family: sans-serif; }
+  .b-avg.none { color: #a89f91; font-size: 0.72rem; }
+
+  .pills { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+  .pill {
+    font-size: 0.7rem;
+    padding: 1px 5px;
+    border-radius: 2px;
+    background: #eee8e0;
+    color: #a89f91;
+    border: 1px solid #dcd2c6;
+    font-family: sans-serif;
+  }
+  .pill.done {
+    background: #e6cbca;
+    color: var(--accent);
+    border-color: #c99390;
+    font-weight: bold;
+  }
+
+  .my-action {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    background: #fcf8f2;
+    border: 1px solid var(--border);
+    padding: 8px;
+    border-radius: 3px;
+  }
+  .read-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    font-weight: bold;
+    font-family: sans-serif;
+    color: var(--text);
+    padding: 2px 0;
+  }
+  .read-btn input { accent-color: var(--accent); width: 18px; height: 18px; cursor: pointer; }
+  .stars { display: inline-flex; gap: 4px; cursor: pointer; }
+  .star { font-size: 1.2rem; color: #d0c4b8; padding: 0 2px; }
+  .star.on { color: var(--gold); }
+  .comment-box {
+    width: 100%;
+    background: #fff;
+    border: 1px solid var(--border-dark);
+    color: var(--text);
+    padding: 6px 8px;
+    border-radius: 2px;
+    font-size: 0.8rem;
+    font-family: sans-serif;
+    margin-top: 2px;
+  }
+  .comments-feed {
+    margin-top: 6px;
+    font-size: 0.75rem;
+    color: #6e6056;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    border-top: 1px dashed var(--border);
+    padding-top: 4px;
+    font-family: sans-serif;
+  }
+  .c-row b { color: var(--accent); margin-right: 4px; }
+
+  /* 底部悬浮快捷栏 */
+  .bottom-dock {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(255, 252, 247, 0.96);
+    border-top: 2px solid var(--border-dark);
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 999;
+    box-shadow: 0 -4px 10px rgba(60,45,35,0.08);
+    backdrop-filter: blur(4px);
+    font-family: sans-serif;
+    font-size: 0.8rem;
+  }
+  .dock-left { display: flex; align-items: center; gap: 6px; }
+  .dock-left select {
+    background: var(--paper);
+    border: 1px solid var(--border-dark);
+    padding: 4px 6px;
+    border-radius: 3px;
+    font-weight: bold;
+    color: var(--accent);
+    font-size: 0.8rem;
+  }
+  .dock-right { color: var(--muted); font-size: 0.75rem; }
+</style>
+</head>
+<body>
+
+<!-- 本地背景音乐 (读取同目录下的 bgm.mp3) -->
+<audio id="bgm" loop preload="auto">
+  <source src="bgm.mp3" type="audio/mpeg">
+</audio>
+
+<div class="container">
+  <header>
+    <!-- 右上角 BGM 音乐挂件 (纯音乐Logo + 音量条) -->
+    <div class="music-widget">
+      <span id="musicIcon" class="music-icon" onclick="toggleBGM()" title="点击播放/暂停音乐">🎵</span>
+      <input type="range" min="0" max="1" step="0.05" value="0.3" oninput="changeVolume(this.value)" title="调节音量">
+    </div>
+    <h1>「メフィスト賞」全通档案</h1>
+    <p class="subtitle">―― 昭和日系侦探事务所・共读计划 ――</p>
+    <div class="sync-badge" id="syncBadge">本地存档模式（填入 Key 开启云同步）</div>
+  </header>
+
+  <!-- 总体与个人进度面板 -->
+  <div class="overview-box">
+    <div class="personal-progress-section">
+      <div class="personal-stats-header">
+        <span>🕵️ 当前侦探：<b id="curMemberLabelText">咖喱棒</b></span>
+        <span>已解明：<b id="personalCount">0</b>/71 (<b id="personalPct">0%</b>)</span>
+      </div>
+      <div class="personal-bar"><div class="personal-fill" id="personalFill"></div></div>
+    </div>
+
+    <div class="team-progress-section">
+      <div class="team-stats-header">
+        <span>🔥 小队整体解明</span>
+        <span>已解明: <b id="unlockCount">0</b>/71 ｜ 总人次: <b id="totalReads">0</b>/568</span>
+      </div>
+      <div class="total-bar"><div class="total-fill" id="totalFill"></div></div>
+    </div>
+
+    <div class="members-grid" id="membersGrid"></div>
+  </div>
+
+  <!-- 筛选与排序 -->
+  <div class="toolbar">
+    <select id="filterSel" onchange="renderList()">
+      <option value="all">全部档案 (71)</option>
+      <option value="unread">我未读的</option>
+      <option value="read">我已读的</option>
+      <option value="team_read">小队已解明</option>
+    </select>
+    <select id="sortSel" onchange="renderList()">
+      <option value="id_asc">按届数正序</option>
+      <option value="id_desc">按届数倒序</option>
+      <option value="avg_desc">⭐ 均分最高</option>
+      <option value="cnt_desc">🔥 人气最多</option>
+    </select>
+    <input type="search" id="searchBox" placeholder="搜索书名/作者..." oninput="renderList()">
+  </div>
+
+  <!-- 书籍列表 -->
+  <div class="book-list" id="bookList"></div>
+</div>
+
+<!-- 底部悬浮快捷栏 -->
+<div class="bottom-dock">
+  <div class="dock-left">
+    <span>当前:</span>
+    <select id="dockMemberSelect" onchange="switchMemberFromDock(this.value)">
+    </select>
+  </div>
+  <div class="dock-right" id="dockProgressText">已读 0/71</div>
+</div>
+
+<script>
+// ================= 1. SUPABASE 配置区 =================
+// 请把你的 Supabase URL 和刚才获取到的 Publishable Key 填在这里：
+const SUPABASE_URL = "https://grvtnqdsmqamzpfhhafy.supabase.co"; 
+const SUPABASE_ANON_KEY = "sb_publishable_YZooexpHdHjVeivMzpE8Xw_VD5GIucV";
+
+let supabaseClient = null;
+if (SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase) {
+  supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const badge = document.getElementById("syncBadge");
+  badge.textContent = "◆ 云端实时同步已连接 ◆";
+  badge.classList.add("online");
+}
+
+// ================= BGM 音乐控制 =================
+const bgm = document.getElementById("bgm");
+bgm.volume = 0.3;
+
+function toggleBGM() {
+  const icon = document.getElementById("musicIcon");
+  if (bgm.paused) {
+    bgm.play().then(() => {
+      icon.classList.add("playing");
+      icon.title = "点击暂停音乐";
+    }).catch(e => {
+      alert("请确认同目录下已放入 bgm.mp3 文件，或点击页面任意位置后再试。");
+    });
+  } else {
+    bgm.pause();
+    icon.classList.remove("playing");
+    icon.title = "点击播放音乐";
+  }
+}
+function changeVolume(val) { bgm.volume = val; }
+
+// ================= 2. 8人名单与71本书单 =================
+const MEMBERS = ["咖喱棒", "kk", "evak", "大妮", "na", "奥利", "小桃", "生菜"];
+
+const BOOKS = [
+  {id:1, y:"1996年", title:"全部成为F", author:"森博嗣"},
+  {id:2, y:"1996年", title:"cosmic世纪末侦探神话", author:"清涼院流水"},
+  {id:3, y:"1997年", title:"六块猪排", author:"苏部健一"},
+  {id:4, y:"1998年", title:"J的神话", author:"乾胡桃"},
+  {id:5, y:"1998年", title:"记忆的尽头", author:"浦贺和宏"},
+  {id:6, y:"1998年", title:"歪曲创世纪", author:"积木镜介"},
+  {id:7, y:"1998年", title:"血塗られた神話（染血的神话）", author:"新堂冬樹"},
+  {id:8, y:"1998年", title:"ダブ(エ)ストン街道", author:"浅暮三文"},
+  {id:9, y:"1998年", title:"QED 百人一首的诅咒", author:"高田崇史"},
+  {id:10, y:"1999年", title:"Kの流儀 フルコンタクト・ゲーム", author:"中島望"},
+  {id:11, y:"1999年", title:"銀の檻を溶かして 薬屋探偵妖綺談", author:"高里椎奈"},
+  {id:12, y:"1999年", title:"二重身宫", author:"雾舍巧"},
+  {id:13, y:"1999年", title:"剪刀男", author:"殊能将之"},
+  {id:14, y:"2000年", title:"UNKNOWN（アンノン）", author:"古処誠二"},
+  {id:15, y:"2000年", title:"真っ暗な夜明け", author:"氷川透"},
+  {id:16, y:"2000年", title:"婚纱", author:"黒田研二"},
+  {id:17, y:"2000年", title:"火蛾", author:"古泉迦十"},
+  {id:18, y:"2000年", title:"星期日的沉默", author:"石崎幸二"},
+  {id:19, y:"2001年", title:"烟，土或食物", author:"舞城王太郎"},
+  {id:20, y:"2001年", title:"月長石の魔犬", author:"秋月涼介"},
+  {id:21, y:"2001年", title:"电影般的风格", author:"佐藤友哉"},
+  {id:22, y:"2001年", title:"DOOMSDAY―審判の夜―", author:"津村巧"},
+  {id:23, y:"2002年", title:"斩首循环", author:"西尾维新"},
+  {id:24, y:"2002年", title:"“钟城”杀人事件", author:"北山猛邦"},
+  {id:25, y:"2002年", title:"それでも、警官は微笑う", author:"日明恩"},
+  {id:26, y:"2002年", title:"死都日本", author:"石黒耀"},
+  {id:27, y:"2003年", title:"错格的幻影", author:"生垣真太郎"},
+  {id:28, y:"2003年", title:"蜜の森の凍える女神", author:"関田涙"},
+  {id:29, y:"2003年", title:"仰望天空哼唱古老的歌", author:"小路幸也"},
+  {id:30, y:"2003年", title:"極限推理コロシアム", author:"矢野龍王"},
+  {id:31, y:"2004年", title:"时间停止的校园", author:"辻村深月"},
+  {id:32, y:"2005年", title:"孤虫症", author:"真梨幸子"},
+  {id:33, y:"2005年", title:"黙過の代償", author:"森山赳志"},
+  {id:34, y:"2006年", title:"少女は踊る暗い腹の中踊る", author:"岡崎隼人"},
+  {id:35, y:"2007年", title:"天帝のはしたなき果実", author:"古野まほろ"},
+  {id:36, y:"2007年", title:"最后的计谋", author:"深水黎一郎"},
+  {id:37, y:"2008年", title:"パラダイス・クローズド THANATOS", author:"汀こるもの"},
+  {id:38, y:"2008年", title:"掘割で笑う女 浪人左門あやかし指南", author:"輪渡颯介"},
+  {id:39, y:"2008年", title:"マネーロード", author:"二郎遊真"},
+  {id:40, y:"2009年", title:"无貌传～双生子的孩子们～", author:"望月守宫"},
+  {id:41, y:"2009年", title:"捕虫歌", author:"赤星香一郎"},
+  {id:42, y:"2009年", title:"深水长眠", author:"白河三兔"},
+  {id:43, y:"2010年", title:"共感觉", author:"天祢凉"},
+  {id:44, y:"2010年", title:"琅琊之鬼", author:"丸山天寿"},
+  {id:45, y:"2010年", title:"图书馆的魔女", author:"高田大介"},
+  {id:46, y:"2012年", title:"恋都の狐さん", author:"北夏輝"},
+  {id:47, y:"2013年", title:"眼球堂谜案", author:"周木律"},
+  {id:48, y:"2013年", title:"愛の徴 ―天国の方角―", author:"近本洋一"},
+  {id:49, y:"2014年", title:"渦巻く回廊の鎮魂曲（レクイエム） 霊媒探偵アーネスト", author:"風森章羽"},
+  {id:50, y:"2014年", title:"○○○○○○○○殺人事件", author:"早坂吝"},
+  {id:51, y:"2015年", title:"恋与禁忌的述语论理", author:"井上真伪"},
+  {id:52, y:"2017年", title:"谁在看着我", author:"宮西真冬"},
+  {id:53, y:"2017年", title:"NO推理、NO探偵？", author:"柾木政宗"},
+  {id:54, y:"2017年", title:"如何拯救每年失去记忆的她", author:"望月拓海"},
+  {id:55, y:"2018年", title:"阎魔堂沙罗的推理奇谭", author:"木元哉多"},
+  {id:56, y:"2018年", title:"没有便利店可怎么活", author:"秋保水菓"},
+  {id:57, y:"2018年", title:"我适合当人吗", author:"黑泽泉水"},
+  {id:58, y:"2018年", title:"异世界系", author:"名仓编"},
+  {id:59, y:"2019年", title:"线，画出的我", author:"砥上裕将"},
+  {id:60, y:"2019年", title:"绞首商会", author:"夕木春央"},
+  {id:61, y:"2020年", title:"＃柚莉爱与捉迷藏", author:"真下みこと"},
+  {id:62, y:"2020年", title:"法庭游戏", author:"五十岚律人"},
+  {id:63, y:"2021年", title:"switch 恶意实验", author:"潮谷验"},
+  {id:64, y:"2023年", title:"大猩猩审判日", author:"须藤古都离"},
+  {id:65, y:"2024年", title:"死んだ山田と教室", author:"金子玲介"},
+  {id:66, y:"2026年", title:"女王陛下に捧ぐ、王家の宝の在処", author:"市塔承"},
+  {id:67, y:"2026年", title:"大江戸フューチャーズ", author:"稲葉大樹"},
+  {id:68, y:"2026年", title:"逆鱗", author:"在嶋満"},
+  {id:69, y:"2026年", title:"かわりに噓", author:"鈴木七月"},
+  {id:70, y:"2026年", title:"すべてふるえる拳たち", author:"十野康真"},
+  {id:71, y:"2026年", title:"名探偵裁判", author:"枢公一"}
+];
+
+// ================= 3. 数据与状态 =================
+const LOCAL_KEY = "mephisto_mobile_v3";
+const USER_KEY = "mephisto_mobile_user_v3";
+
+let currentMember = localStorage.getItem(USER_KEY) || MEMBERS[0];
+if (!MEMBERS.includes(currentMember)) currentMember = MEMBERS[0];
+
+let records = JSON.parse(localStorage.getItem(LOCAL_KEY) || "{}");
+
+function getRec(bookId, member) {
+  return records[`${bookId}_${member}`] || { is_read: false, score: null, comment: "" };
+}
+
+async function fetchFromSupabase() {
+  if (!supabaseClient) return;
+  const { data, error } = await supabaseClient.from("checkins").select("*");
+  if (!error && data) {
+    records = {};
+    data.forEach(row => {
+      records[`${row.book_id}_${row.member}`] = {
+        is_read: row.is_read,
+        score: row.score ? Number(row.score) : null,
+        comment: row.comment || ""
+      };
+    });
+    localStorage.setItem(LOCAL_KEY, JSON.stringify(records));
+    renderOverview();
+    renderList();
+  }
+}
+
+async function updateRec(bookId, member, patch) {
+  const key = `${bookId}_${member}`;
+  const prev = getRec(bookId, member);
+  const next = { ...prev, ...patch };
+  records[key] = next;
+  localStorage.setItem(LOCAL_KEY, JSON.stringify(records));
+  renderOverview();
+  renderList();
+
+  if (supabaseClient) {
+    await supabaseClient.from("checkins").upsert({
+      book_id: bookId,
+      member: member,
+      is_read: next.is_read,
+      score: next.score,
+      comment: next.comment,
+      updated_at: new Date().toISOString()
+    });
+  }
+}
+
+// ================= 4. 渲染界面 =================
+function getBookStats(bookId) {
+  let readCount = 0;
+  let scoreSum = 0;
+  let scoreCount = 0;
+  MEMBERS.forEach(m => {
+    const r = getRec(bookId, m);
+    if (r.is_read) readCount++;
+    if (r.score && r.score > 0) {
+      scoreSum += Number(r.score);
+      scoreCount++;
+    }
+  });
+  const avg = scoreCount > 0 ? (scoreSum / scoreCount).toFixed(1) : null;
+  return { readCount, avg, scoreCount };
+}
+
+function renderOverview() {
+  document.getElementById("curMemberLabelText").textContent = currentMember;
+  
+  const dockSelect = document.getElementById("dockMemberSelect");
+  dockSelect.innerHTML = MEMBERS.map(m => `<option value="${m}" ${m === currentMember ? 'selected' : ''}>${m}</option>`).join("");
+
+  let personalReadCount = 0;
+  BOOKS.forEach(b => { if (getRec(b.id, currentMember).is_read) personalReadCount++; });
+  const personalPct = Math.round((personalReadCount / BOOKS.length) * 100);
+  
+  document.getElementById("personalCount").textContent = personalReadCount;
+  document.getElementById("personalPct").textContent = personalPct + "%";
+  document.getElementById("personalFill").style.width = personalPct + "%";
+  document.getElementById("dockProgressText").textContent = `已读 ${personalReadCount}/71`;
+
+  let totalReads = 0;
+  let unlockedBooks = 0;
+  BOOKS.forEach(b => {
+    const st = getBookStats(b.id);
+    if (st.readCount > 0) unlockedBooks++;
+  });
+  MEMBERS.forEach(m => {
+    BOOKS.forEach(b => { if (getRec(b.id, m).is_read) totalReads++; });
+  });
+
+  document.getElementById("unlockCount").textContent = unlockedBooks;
+  document.getElementById("totalReads").textContent = totalReads;
+  document.getElementById("totalFill").style.width = `${(totalReads / (BOOKS.length * MEMBERS.length) * 100).toFixed(1)}%`;
+
+  const grid = document.getElementById("membersGrid");
+  grid.innerHTML = "";
+  MEMBERS.forEach(m => {
+    let cnt = 0;
+    BOOKS.forEach(b => { if (getRec(b.id, m).is_read) cnt++; });
+    const pct = Math.round((cnt / BOOKS.length) * 100);
+
+    const card = document.createElement("div");
+    card.className = `member-card ${m === currentMember ? "active" : ""}`;
+    card.onclick = () => {
+      currentMember = m;
+      localStorage.setItem(USER_KEY, m);
+      renderOverview();
+      renderList();
+    };
+    card.innerHTML = `
+      <div class="m-top">
+        <span>${m}</span>
+        <span class="m-cnt">${cnt}/71</span>
+      </div>
+      <div class="m-bar"><div class="m-fill" style="width:${pct}%"></div></div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function switchMemberFromDock(m) {
+  currentMember = m;
+  localStorage.setItem(USER_KEY, m);
+  renderOverview();
+  renderList();
+}
+
+function renderList() {
+  const listEl = document.getElementById("bookList");
+  const filterVal = document.getElementById("filterSel").value;
+  const sortVal = document.getElementById("sortSel").value;
+  const kw = document.getElementById("searchBox").value.trim().toLowerCase();
+
+  let items = BOOKS.filter(b => {
+    const myR = getRec(b.id, currentMember);
+    const st = getBookStats(b.id);
+    if (filterVal === "unread" && myR.is_read) return false;
+    if (filterVal === "read" && !myR.is_read) return false;
+    if (filterVal === "team_read" && st.readCount === 0) return false;
+    if (kw) {
+      const str = `第${b.id}回 ${b.y} ${b.title} ${b.author}`.toLowerCase();
+      if (!str.includes(kw)) return false;
+    }
+    return true;
+  });
+
+  items.sort((a, b) => {
+    if (sortVal === "id_asc") return a.id - b.id;
+    if (sortVal === "id_desc") return b.id - a.id;
+    const stA = getBookStats(a.id), stB = getBookStats(b.id);
+    if (sortVal === "avg_desc") return (Number(stB.avg) || 0) - (Number(stA.avg) || 0);
+    if (sortVal === "cnt_desc") return stB.readCount - stA.readCount;
+    return a.id - b.id;
+  });
+
+  listEl.innerHTML = "";
+
+  items.forEach(b => {
+    const myR = getRec(b.id, currentMember);
+    const st = getBookStats(b.id);
+
+    const pillsHtml = MEMBERS.map(m => {
+      const r = getRec(b.id, m);
+      return `<span class="pill ${r.is_read ? "done" : ""}" title="${m}">${m}${r.score ? " ★" + r.score : ""}</span>`;
+    }).join("");
+
+    let starsHtml = "";
+    for (let s = 1; s <= 5; s++) {
+      starsHtml += `<span class="star ${(myR.score || 0) >= s ? "on" : ""}" onclick="setScore(${b.id}, '${currentMember}', ${s})">★</span>`;
+    }
+
+    let commentsHtml = "";
+    MEMBERS.forEach(m => {
+      const r = getRec(b.id, m);
+      if (r.comment && r.comment.trim()) {
+        commentsHtml += `<div class="c-row"><b>${m}:</b>${esc(r.comment)}</div>`;
+      }
+    });
+
+    const row = document.createElement("div");
+    row.className = `book-item ${myR.is_read ? "is-read" : ""}`;
+    row.innerHTML = `
+      <div class="b-header">
+        <div class="b-info">
+          <span class="b-id">第${b.id}回</span>
+          <span class="b-title">${b.title}</span>
+        </div>
+        <div class="b-avg ${st.avg ? "" : "none"}">
+          ${st.avg ? `⭐ ${st.avg}分 (${st.scoreCount})` : "暂无评分"}
+        </div>
+      </div>
+      <div style="font-size:0.72rem; color:var(--muted); margin-bottom:6px;">作者：${b.author} ｜ 出版：${b.y}</div>
+      <div class="pills">${pillsHtml}</div>
+      <div class="my-action">
+        <label class="read-btn">
+          <input type="checkbox" ${myR.is_read ? "checked" : ""} onchange="toggleRead(${b.id}, '${currentMember}')">
+          <span>${currentMember}已读</span>
+        </label>
+        <div class="stars">${starsHtml}</div>
+        <input class="comment-box" type="text" placeholder="写句短评（回车保存）..." value="${esc(myR.comment)}" onchange="setComment(${b.id}, '${currentMember}', this.value)">
+      </div>
+      ${commentsHtml ? `<div class="comments-feed">${commentsHtml}</div>` : ""}
+    `;
+    listEl.appendChild(row);
+  });
+}
+
+function toggleRead(bookId, member) {
+  const cur = getRec(bookId, member);
+  updateRec(bookId, member, { is_read: !cur.is_read });
+}
+
+function setScore(bookId, member, s) {
+  const cur = getRec(bookId, member);
+  const nextScore = cur.score === s ? null : s;
+  updateRec(bookId, member, { score: nextScore, is_read: nextScore ? true : cur.is_read });
+}
+
+function setComment(bookId, member, text) {
+  const cur = getRec(bookId, member);
+  updateRec(bookId, member, { comment: text, is_read: text.trim() ? true : cur.is_read });
+}
+
+function esc(str) {
+  if (!str) return "";
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+renderOverview();
+renderList();
+fetchFromSupabase();
+</script>
+</body>
+</html>
