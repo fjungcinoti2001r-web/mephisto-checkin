@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>「メフィスト賞」全通计划</title>
+<!-- 优化为标准的 1:1 比例矢量书本图标 -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='100' fill='%238c3b2f'/><text x='50%' y='55%' dominant-baseline='central' text-anchor='middle' font-size='280'>📖</text></svg>">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root {
@@ -62,45 +64,6 @@
     color: var(--muted);
     font-family: sans-serif;
     letter-spacing: 0.5px;
-  }
-  
-  /* 顶部 BGM 音乐挂件 */
-  .music-widget {
-    position: absolute;
-    right: 10px;
-    top: 10px;
-    background: #faf4ec;
-    border: 1px solid var(--border-dark);
-    padding: 4px 8px;
-    border-radius: 3px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.85rem;
-    font-family: sans-serif;
-    color: var(--text);
-  }
-  .music-icon {
-    cursor: pointer;
-    font-size: 1.1rem;
-    transition: transform 0.15s, opacity 0.15s;
-    user-select: none;
-    opacity: 0.5;
-  }
-  .music-icon.playing {
-    opacity: 1;
-    transform: scale(1.1);
-    animation: pulse 1.5s infinite;
-  }
-  @keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.15); }
-    100% { transform: scale(1); }
-  }
-  .music-widget input[type="range"] {
-    width: 50px;
-    accent-color: var(--accent);
-    cursor: pointer;
   }
 
   .sync-badge {
@@ -333,9 +296,9 @@
     bottom: 0;
     left: 0;
     right: 0;
-    background: rgba(255, 252, 247, 0.96);
+    background: rgba(255, 252, 247, 0.98);
     border-top: 2px solid var(--border-dark);
-    padding: 8px 12px;
+    padding: 6px 10px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -343,37 +306,49 @@
     box-shadow: 0 -4px 10px rgba(60,45,35,0.08);
     backdrop-filter: blur(4px);
     font-family: sans-serif;
-    font-size: 0.8rem;
+    font-size: 0.78rem;
   }
   .dock-left { display: flex; align-items: center; gap: 6px; }
   .dock-left select {
     background: var(--paper);
     border: 1px solid var(--border-dark);
-    padding: 4px 6px;
+    padding: 3px 6px;
     border-radius: 3px;
     font-weight: bold;
     color: var(--accent);
-    font-size: 0.8rem;
+    font-size: 0.78rem;
   }
-  .dock-right { color: var(--muted); font-size: 0.75rem; }
+  .dock-music { display: flex; align-items: center; gap: 4px; }
+  .music-icon {
+    cursor: pointer;
+    font-size: 1.1rem;
+    user-select: none;
+    opacity: 0.4;
+    transition: 0.15s;
+  }
+  .music-icon.playing {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  .dock-music input[type="range"] {
+    width: 45px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+  .dock-right { color: var(--muted); font-size: 0.72rem; }
 </style>
 </head>
 <body>
 
-<!-- 本地背景音乐 (读取同目录下的 bgm.mp3) -->
+<!-- 本地背景音乐 -->
 <audio id="bgm" loop preload="auto">
   <source src="bgm.mp3" type="audio/mpeg">
 </audio>
 
 <div class="container">
   <header>
-    <!-- 右上角 BGM 音乐挂件 (纯音乐Logo + 音量条) -->
-    <div class="music-widget">
-      <span id="musicIcon" class="music-icon" onclick="toggleBGM()" title="点击播放/暂停音乐">🎵</span>
-      <input type="range" min="0" max="1" step="0.05" value="0.3" oninput="changeVolume(this.value)" title="调节音量">
-    </div>
-    <h1>「メフィスト賞」</h1>
-    <p class="subtitle">――全通计划 ――</p>
+    <h1>📖 「メフィスト賞」</h1>
+    <p class="subtitle">―― 全通计划 ――</p>
     <div class="sync-badge" id="syncBadge"></div>
   </header>
 
@@ -426,12 +401,15 @@
     <select id="dockMemberSelect" onchange="switchMemberFromDock(this.value)">
     </select>
   </div>
+  <div class="dock-music">
+    <span id="musicIcon" class="music-icon" onclick="toggleBGM()" title="点击播放/暂停音乐">🎵</span>
+    <input type="range" min="0" max="1" step="0.05" value="0.3" oninput="changeVolume(this.value)" title="音量">
+  </div>
   <div class="dock-right" id="dockProgressText">已读 0/71</div>
 </div>
 
 <script>
 // ================= 1. SUPABASE 配置区 =================
-// 请把你的 Supabase URL 和刚才获取到的 Publishable Key 填在这里：
 const SUPABASE_URL = "https://grvtnqdsmqamzpfhhafy.supabase.co"; 
 const SUPABASE_ANON_KEY = "sb_publishable_YZooexpHdHjVeivMzpE8Xw_VD5GIucV";
 
