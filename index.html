@@ -439,7 +439,7 @@ let supabaseClient = null;
 if (SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase) {
   supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   const badge = document.getElementById("syncBadge");
-  badge.textContent = "◆ 云端实时同步已连接 ◆";
+  badge.textContent = "◆开始阅读◆";
   badge.classList.add("online");
 }
 
