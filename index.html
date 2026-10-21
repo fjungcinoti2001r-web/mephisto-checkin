@@ -4,9 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>「メフィスト賞」全通计划</title>
-<!-- 优化为标准的 1:1 比例矢量书本图标 -->
+<!-- 完美 1:1 比例矢量书本图标 -->
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='100' fill='%238c3b2f'/><text x='50%' y='55%' dominant-baseline='central' text-anchor='middle' font-size='280'>📖</text></svg>">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <style>
   :root {
     --bg: #f4efe6;          /* 温暖米白色背景 */
@@ -31,7 +32,7 @@
   }
   .container { max-width: 980px; margin: 0 auto; padding: 0 10px; }
   
-  /* 顶部昭和复古横幅 */
+  /* 顶部昭和复古横幅（右上角干净无挂件） */
   header {
     margin: 12px 0 12px;
     background: var(--paper);
@@ -166,7 +167,7 @@
   .m-bar { height: 3px; background: #e0d5cb; margin-top: 4px; overflow: hidden; }
   .m-fill { height: 100%; background: var(--accent); width: 0%; }
 
-  /* 筛选与排序栏 */
+  /* 筛选与排序栏及分享按钮 */
   .toolbar {
     display: flex;
     gap: 6px;
@@ -183,8 +184,21 @@
     outline: none;
     font-family: sans-serif;
   }
-  select { flex: 1; min-width: 110px; }
-  input[type="search"] { flex: 2; min-width: 140px; }
+  select { flex: 1; min-width: 100px; }
+  input[type="search"] { flex: 2; min-width: 120px; }
+  .share-btn {
+    background: var(--accent);
+    color: #fff;
+    border: 1px solid var(--border-dark);
+    padding: 8px 12px;
+    border-radius: 3px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    font-weight: bold;
+    font-family: sans-serif;
+    white-space: nowrap;
+  }
+  .share-btn:active { opacity: 0.8; }
 
   /* 书单列表 */
   .book-list { display: flex; flex-direction: column; gap: 8px; }
@@ -290,7 +304,7 @@
   }
   .c-row b { color: var(--accent); margin-right: 4px; }
 
-  /* 底部悬浮快捷栏 */
+  /* 底部悬浮快捷栏（左侧：当前侦探选择，右侧：音乐 Logo 与音量控制条） */
   .bottom-dock {
     position: fixed;
     bottom: 0;
@@ -298,7 +312,7 @@
     right: 0;
     background: rgba(255, 252, 247, 0.98);
     border-top: 2px solid var(--border-dark);
-    padding: 6px 10px;
+    padding: 6px 12px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -318,7 +332,7 @@
     color: var(--accent);
     font-size: 0.78rem;
   }
-  .dock-music { display: flex; align-items: center; gap: 4px; }
+  .dock-music { display: flex; align-items: center; gap: 6px; }
   .music-icon {
     cursor: pointer;
     font-size: 1.1rem;
@@ -331,11 +345,62 @@
     transform: scale(1.1);
   }
   .dock-music input[type="range"] {
-    width: 45px;
+    width: 60px;
     accent-color: var(--accent);
     cursor: pointer;
   }
-  .dock-right { color: var(--muted); font-size: 0.72rem; }
+
+  /* 分享海报弹窗样式 */
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    padding: 15px;
+  }
+  .modal-overlay.active { display: flex; }
+  .poster-card {
+    background: #fffcf7;
+    border: 3px solid var(--border-dark);
+    border-radius: 6px;
+    padding: 20px;
+    width: 100%;
+    max-width: 380px;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    position: relative;
+    background-image: radial-gradient(circle, #e6ded1 1px, transparent 1px);
+    background-size: 15px 15px;
+  }
+  .poster-title { font-size: 1.2rem; color: var(--accent); font-weight: bold; letter-spacing: 2px; margin-bottom: 4px; }
+  .poster-sub { font-size: 0.75rem; color: var(--muted); margin-bottom: 16px; font-family: sans-serif; }
+  .poster-box {
+    background: var(--paper-card);
+    border: 1px solid var(--border-dark);
+    padding: 12px;
+    border-radius: 4px;
+    margin-bottom: 14px;
+    text-align: left;
+    font-family: sans-serif;
+    font-size: 0.85rem;
+  }
+  .poster-box p { margin: 6px 0; display: flex; justify-content: space-between; }
+  .poster-box b { color: var(--accent); }
+  .poster-actions { display: flex; gap: 8px; margin-top: 14px; }
+  .poster-actions button {
+    flex: 1;
+    padding: 8px;
+    border-radius: 3px;
+    border: 1px solid var(--border-dark);
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 0.82rem;
+  }
+  .btn-save { background: var(--accent); color: #fff; }
+  .btn-close { background: #e0d5cb; color: var(--text); }
 </style>
 </head>
 <body>
@@ -347,7 +412,7 @@
 
 <div class="container">
   <header>
-    <h1>「メフィスト賞」</h1>
+    <h1>📖 「メフィスト賞」</h1>
     <p class="subtitle">―― 全通计划 ――</p>
     <div class="sync-badge" id="syncBadge"></div>
   </header>
@@ -373,7 +438,7 @@
     <div class="members-grid" id="membersGrid"></div>
   </div>
 
-  <!-- 筛选与排序 -->
+  <!-- 筛选、排序与打卡分享按钮 -->
   <div class="toolbar">
     <select id="filterSel" onchange="renderList()">
       <option value="all">全部档案 (71)</option>
@@ -387,14 +452,15 @@
       <option value="avg_desc">⭐ 均分最高</option>
       <option value="cnt_desc">🔥 人气最高</option>
     </select>
-    <input type="search" id="searchBox" placeholder="搜索书名/作者..." oninput="renderList()">
+    <input type="search" id="searchBox" placeholder="搜索书名..." oninput="renderList()">
+    <button class="share-btn" onclick="openSharePoster()">📊 打卡分享</button>
   </div>
 
   <!-- 书籍列表 -->
   <div class="book-list" id="bookList"></div>
 </div>
 
-<!-- 底部悬浮快捷栏 -->
+<!-- 底部悬浮快捷栏（左侧：当前侦探选择，右侧：音乐Logo与音量条） -->
 <div class="bottom-dock">
   <div class="dock-left">
     <span>当前:</span>
@@ -403,9 +469,26 @@
   </div>
   <div class="dock-music">
     <span id="musicIcon" class="music-icon" onclick="toggleBGM()" title="点击播放/暂停音乐">🎵</span>
-    <input type="range" min="0" max="1" step="0.05" value="0.3" oninput="changeVolume(this.value)" title="音量">
+    <input type="range" min="0" max="1" step="0.05" value="0.3" oninput="changeVolume(this.value)" title="音量调节">
   </div>
-  <div class="dock-right" id="dockProgressText">已读 0/71</div>
+</div>
+
+<!-- 打卡分享海报弹窗（已移除“小队已解明”） -->
+<div class="modal-overlay" id="shareModal" onclick="if(event.target===this)closeSharePoster()">
+  <div class="poster-card" id="posterContent">
+    <div class="poster-title">◆ 侦探档案室・共读捷报 ◆</div>
+    <div class="poster-sub">「メフィスト賞」全通计划打卡凭证</div>
+    <div class="poster-box">
+      <p><span>当前侦探：</span><b id="posterMemberName">咖喱棒</b></p>
+      <p><span>个人已解明：</span><b id="posterPersonalText">0 / 71 部</b></p>
+      <p><span>档案总阅读人次：</span><b id="posterTotalReadsText">0 / 568</b></p>
+    </div>
+    <div style="font-size:0.7rem; color: var(--muted); font-family: sans-serif;">扫描或截图保存，与伙伴共勉！</div>
+    <div class="poster-actions">
+      <button class="btn-save" onclick="downloadPoster()">📸 保存海报图片</button>
+      <button class="btn-close" onclick="closeSharePoster()">关闭</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -588,6 +671,9 @@ function getBookStats(bookId) {
   return { readCount, avg, scoreCount };
 }
 
+let globalTotalReads = 0;
+let globalUnlockedBooks = 0;
+
 function renderOverview() {
   document.getElementById("curMemberLabelText").textContent = currentMember;
   
@@ -601,21 +687,20 @@ function renderOverview() {
   document.getElementById("personalCount").textContent = personalReadCount;
   document.getElementById("personalPct").textContent = personalPct + "%";
   document.getElementById("personalFill").style.width = personalPct + "%";
-  document.getElementById("dockProgressText").textContent = `已读 ${personalReadCount}/71`;
 
-  let totalReads = 0;
-  let unlockedBooks = 0;
+  globalTotalReads = 0;
+  globalUnlockedBooks = 0;
   BOOKS.forEach(b => {
     const st = getBookStats(b.id);
-    if (st.readCount > 0) unlockedBooks++;
+    if (st.readCount > 0) globalUnlockedBooks++;
   });
   MEMBERS.forEach(m => {
-    BOOKS.forEach(b => { if (getRec(b.id, m).is_read) totalReads++; });
+    BOOKS.forEach(b => { if (getRec(b.id, m).is_read) globalTotalReads++; });
   });
 
-  document.getElementById("unlockCount").textContent = unlockedBooks;
-  document.getElementById("totalReads").textContent = totalReads;
-  document.getElementById("totalFill").style.width = `${(totalReads / (BOOKS.length * MEMBERS.length) * 100).toFixed(1)}%`;
+  document.getElementById("unlockCount").textContent = globalUnlockedBooks;
+  document.getElementById("totalReads").textContent = globalTotalReads;
+  document.getElementById("totalFill").style.width = `${(globalTotalReads / (BOOKS.length * MEMBERS.length) * 100).toFixed(1)}%`;
 
   const grid = document.getElementById("membersGrid");
   grid.innerHTML = "";
@@ -648,6 +733,29 @@ function switchMemberFromDock(m) {
   localStorage.setItem(USER_KEY, m);
   renderOverview();
   renderList();
+}
+
+function openSharePoster() {
+  document.getElementById("posterMemberName").textContent = currentMember;
+  let personalReadCount = 0;
+  BOOKS.forEach(b => { if (getRec(b.id, currentMember).is_read) personalReadCount++; });
+  document.getElementById("posterPersonalText").textContent = `${personalReadCount} / 71 部 (${Math.round(personalReadCount/71*100)}%)`;
+  document.getElementById("posterTotalReadsText").textContent = `${globalTotalReads} / 568`;
+  document.getElementById("shareModal").classList.add("active");
+}
+
+function closeSharePoster() {
+  document.getElementById("shareModal").classList.remove("active");
+}
+
+function downloadPoster() {
+  const card = document.getElementById("posterContent");
+  html2canvas(card, { scale: 2 }).then(canvas => {
+    const link = document.createElement("a");
+    link.download = `mephisto-progress-${currentMember}.png`;
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  });
 }
 
 function renderList() {
