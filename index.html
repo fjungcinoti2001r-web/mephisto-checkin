@@ -440,7 +440,7 @@
     <div class="team-progress-section">
       <div class="team-stats-header">
         <span>小队整体进度</span>
-        <span>已读: <b id="unlockCount">0</b>/71 ｜ 总人次: <b id="totalReads">0</b>/568</span>
+        <span>已读: <b id="unlockCount">0</b>/71 ｜ 总人次: <b id="totalReads">0</b>/923</span>
       </div>
       <div class="total-bar"><div class="total-fill" id="totalFill"></div></div>
     </div>
@@ -493,7 +493,7 @@
         <div class="poster-box">
           <p><span>当前侦探：</span><b id="posterMemberName">咖喱棒</b></p>
           <p><span>已读：</span><b id="posterPersonalText">0 / 71 部</b></p>
-          <p><span>总阅读人次：</span><b id="posterTotalReadsText">0 / 568</b></p>
+          <p><span>总阅读人次：</span><b id="posterTotalReadsText">0 / 923</b></p>
         </div>
         <div style="font-size:0.68rem; color: #827267; font-family: sans-serif;">―― 面白ければなんでもあり ――</div>
       </div>
@@ -758,7 +758,7 @@ async function openSharePoster() {
   let personalReadCount = 0;
   BOOKS.forEach(b => { if (getRec(b.id, currentMember).is_read) personalReadCount++; });
   document.getElementById("posterPersonalText").textContent = `${personalReadCount} / 71 部 (${Math.round(personalReadCount / 71 * 100)}%)`;
-  document.getElementById("posterTotalReadsText").textContent = `${globalTotalReads} / 568`;
+  document.getElementById("posterTotalReadsText").textContent = `${globalTotalReads} / 923`;
 
   imgContainer.innerHTML = '<div class="poster-loading">正在生成打卡海报…</div>';
   modal.classList.add("active");
