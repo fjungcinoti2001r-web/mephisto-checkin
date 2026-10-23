@@ -440,7 +440,7 @@
     <div class="team-progress-section">
       <div class="team-stats-header">
         <span>小队整体进度</span>
-        <span>已读: <b id="unlockCount">0</b>/71 ｜ 总人次: <b id="totalReads">0</b>/1065</span>
+        <span>已读: <b id="unlockCount">0</b>/71 ｜ 总人次: <b id="totalReads">0</b>/1136</span>
       </div>
       <div class="total-bar"><div class="total-fill" id="totalFill"></div></div>
     </div>
@@ -493,7 +493,7 @@
         <div class="poster-box">
           <p><span>当前侦探：</span><b id="posterMemberName">咖喱棒</b></p>
           <p><span>已读：</span><b id="posterPersonalText">0 / 71 部</b></p>
-          <p><span>总阅读人次：</span><b id="posterTotalReadsText">0 / 1065</b></p>
+          <p><span>总阅读人次：</span><b id="posterTotalReadsText">0 / 1136</b></p>
         </div>
         <div style="font-size:0.68rem; color: #827267; font-family: sans-serif;">―― 面白ければなんでもあり ――</div>
       </div>
@@ -540,7 +540,7 @@ function toggleBGM() {
 function changeVolume(val) { bgm.volume = val; }
 
 // ================= 2. 9人名单与71本书单 =================
-const MEMBERS = ["咖喱棒", "kk", "evak", "大妮", "na", "奥利", "小桃", "生菜", "顾总", "阿听", "梦野", "章鱼", "大吉", "濯香", "屎团子"];
+const MEMBERS = ["咖喱棒", "kk", "evak", "大妮", "na", "奥利", "小桃", "生菜", "顾总", "阿听", "梦野", "章鱼", "大吉", "濯香", "屎团子", "派派"];
 
 const BOOKS = [
   {id:1, y:"1996年", title:"全部成为F", author:"森博嗣"},
@@ -758,7 +758,7 @@ async function openSharePoster() {
   let personalReadCount = 0;
   BOOKS.forEach(b => { if (getRec(b.id, currentMember).is_read) personalReadCount++; });
   document.getElementById("posterPersonalText").textContent = `${personalReadCount} / 71 部 (${Math.round(personalReadCount / 71 * 100)}%)`;
-  document.getElementById("posterTotalReadsText").textContent = `${globalTotalReads} / 1065`;
+  document.getElementById("posterTotalReadsText").textContent = `${globalTotalReads} / 1136`;
 
   imgContainer.innerHTML = '<div class="poster-loading">正在生成打卡海报…</div>';
   modal.classList.add("active");
